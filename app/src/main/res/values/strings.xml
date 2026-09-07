@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">打卡王</string>
+    <string name="tab_home">今日</string>
+    <string name="tab_template">模板</string>
+    <string name="tab_settings">设置</string>
+    <string name="accessibility_service_label">打卡王 - 打卡状态检测</string>
+    <string name="accessibility_service_description">仅用于识别目标 APP 的打卡页面文字（如"已签到"），自动在打卡清单中标记完成。不会模拟任何点击操作。</string>
+</resources>
