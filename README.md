@@ -13,6 +13,14 @@
 - **平台区分**：任务可分"手机 APP / PC 客户端 / 网页"三类，PC 类任务（如 WorkBuddy）带平台徽标，点击「去打卡」仅提示、不会误跳转
 - **今日进度**：首页直观显示今日完成进度
 
+## 界面截图
+
+| 首页 | 模板库 |
+| :---: | :---: |
+| ![首页](docs/screenshots/01-home.png) | ![模板库](docs/screenshots/02-templates.png) |
+| 设置 | 编辑任务 |
+| ![设置](docs/screenshots/03-settings.png) | ![编辑任务](docs/screenshots/04-edit.png) |
+
 ## 内置模板
 
 红果短剧、拼多多、多邻国、蚂蚁森林、抖音极速版、今日头条极速版、番茄免费小说、快手极速版、吉利汽车、WorkBuddy（PC）
