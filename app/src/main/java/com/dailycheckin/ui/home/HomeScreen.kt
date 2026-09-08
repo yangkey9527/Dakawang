@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddCircleOutline
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
@@ -27,6 +28,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -51,6 +53,7 @@ import com.dailycheckin.util.DateUtils
 fun HomeScreen(
     onAddTask: () -> Unit,
     onEditTask: (Long) -> Unit,
+    onHistory: (Long) -> Unit,
     viewModel: HomeViewModel = viewModel()
 ) {
     val items by viewModel.items.collectAsState()
@@ -75,7 +78,8 @@ fun HomeScreen(
                         onMarkDone = { viewModel.markDone(item) },
                         onMarkPending = { viewModel.markPending(item) },
                         onMarkSkipped = { viewModel.markSkipped(item) },
-                        onEdit = { onEditTask(item.task.id) }
+                        onEdit = { onEditTask(item.task.id) },
+                        onHistory = { onHistory(item.task.id) }
                     )
                 }
             }
@@ -150,7 +154,8 @@ private fun TaskCard(
     onMarkDone: () -> Unit,
     onMarkPending: () -> Unit,
     onMarkSkipped: () -> Unit,
-    onEdit: () -> Unit
+    onEdit: () -> Unit,
+    onHistory: () -> Unit
 ) {
     val task = item.task
     val done = item.status == CheckinRecord.STATUS_DONE
@@ -192,6 +197,14 @@ private fun TaskCard(
                         style = MaterialTheme.typography.bodySmall,
                         color = if (overdue) MaterialTheme.colorScheme.error
                         else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                IconButton(onClick = onHistory) {
+                    Icon(
+                        Icons.Outlined.CalendarMonth,
+                        contentDescription = "查看打卡历史",
+                        tint = MaterialTheme.colorScheme.outline,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
                 StatusIcon(done = done, skipped = skipped, accent = accent)

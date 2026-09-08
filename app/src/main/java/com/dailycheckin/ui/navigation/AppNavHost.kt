@@ -24,6 +24,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.dailycheckin.R
 import com.dailycheckin.ui.edit.TaskEditScreen
+import com.dailycheckin.ui.history.HistoryScreen
 import com.dailycheckin.ui.home.HomeScreen
 import com.dailycheckin.ui.settings.SettingsScreen
 import com.dailycheckin.ui.template.TemplateScreen
@@ -33,8 +34,10 @@ object Routes {
     const val TEMPLATE = "template"
     const val SETTINGS = "settings"
     const val EDIT = "edit?taskId={taskId}"
+    const val HISTORY = "history?taskId={taskId}"
 
     fun edit(taskId: Long? = null) = "edit?taskId=${taskId ?: -1L}"
+    fun history(taskId: Long) = "history?taskId=$taskId"
 }
 
 private data class BottomItem(
@@ -87,7 +90,8 @@ fun AppNavHost() {
             composable(Routes.HOME) {
                 HomeScreen(
                     onAddTask = { navController.navigate(Routes.TEMPLATE) },
-                    onEditTask = { navController.navigate(Routes.edit(it)) }
+                    onEditTask = { navController.navigate(Routes.edit(it)) },
+                    onHistory = { navController.navigate(Routes.history(it)) }
                 )
             }
             composable(Routes.TEMPLATE) {
@@ -110,6 +114,15 @@ fun AppNavHost() {
                     taskId = taskId,
                     onBack = { navController.popBackStack() }
                 )
+            }
+            composable(
+                route = Routes.HISTORY,
+                arguments = listOf(navArgument("taskId") {
+                    type = NavType.LongType
+                    defaultValue = -1L
+                })
+            ) {
+                HistoryScreen(onBack = { navController.popBackStack() })
             }
         }
     }

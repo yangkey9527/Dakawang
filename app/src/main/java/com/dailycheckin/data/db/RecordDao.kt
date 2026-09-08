@@ -20,6 +20,12 @@ interface RecordDao {
     @Query("SELECT * FROM records WHERE taskId = :taskId AND date = :date")
     fun observe(taskId: Long, date: String): Flow<CheckinRecord?>
 
+    @Query("SELECT * FROM records WHERE taskId = :taskId ORDER BY date ASC")
+    fun observeByTask(taskId: Long): Flow<List<CheckinRecord>>
+
+    @Query("SELECT * FROM records ORDER BY date ASC, taskId ASC")
+    suspend fun getAll(): List<CheckinRecord>
+
     @Upsert
     suspend fun upsert(record: CheckinRecord)
 

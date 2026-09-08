@@ -12,6 +12,9 @@ interface TaskDao {
     @Query("SELECT * FROM tasks ORDER BY sortOrder ASC, id ASC")
     fun observeAll(): Flow<List<CheckinTask>>
 
+    @Query("SELECT * FROM tasks ORDER BY sortOrder ASC, id ASC")
+    suspend fun getAll(): List<CheckinTask>
+
     @Query("SELECT * FROM tasks WHERE enabled = 1 ORDER BY sortOrder ASC, id ASC")
     suspend fun getEnabled(): List<CheckinTask>
 
