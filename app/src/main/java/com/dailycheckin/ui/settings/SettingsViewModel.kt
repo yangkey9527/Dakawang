@@ -10,6 +10,7 @@ import com.dailycheckin.data.repo.SettingsRepository
 import com.dailycheckin.reminder.CheckinScheduler
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -23,6 +24,12 @@ class SettingsViewModel(private val app: Application) : AndroidViewModel(app) {
     val detectEnabled: StateFlow<Boolean> = settings.detectEnabled
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
+    val reviewTime: StateFlow<String> = settings.reviewTime
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsRepository.DEFAULT_REVIEW_TIME)
+
+    val repeatIntervalMin: StateFlow<Int> = settings.repeatIntervalMin
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsRepository.DEFAULT_REPEAT_INTERVAL_MIN)
+
     fun setRemindersEnabled(enabled: Boolean) {
         viewModelScope.launch {
             settings.setRemindersEnabled(enabled)
@@ -33,6 +40,22 @@ class SettingsViewModel(private val app: Application) : AndroidViewModel(app) {
                 CheckinScheduler.cancelAll(app)
                 CheckinScheduler.cancelReview(app)
             }
+        }
+    }
+
+    fun setReviewTime(time: String) {
+        viewModelScope.launch {
+            settings.setReviewTime(time)
+            // 汇总时间变更 → 立即按新时间重排
+            if (settings.remindersEnabled.first()) {
+                CheckinScheduler.scheduleReview(app)
+            }
+        }
+    }
+
+    fun setRepeatIntervalMin(minutes: Int) {
+        viewModelScope.launch {
+            settings.setRepeatIntervalMin(minutes)
         }
     }
 

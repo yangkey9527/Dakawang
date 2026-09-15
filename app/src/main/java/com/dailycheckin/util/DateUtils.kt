@@ -12,6 +12,10 @@ object DateUtils {
 
     fun today(): String = LocalDate.now().format(dateFmt)
 
+    fun parse(date: String): LocalDate = LocalDate.parse(date, dateFmt)
+
+    fun format(date: LocalDate): String = date.format(dateFmt)
+
     fun formatDate(date: String): String = date
 
     fun formatDateTime(ts: Long): String =

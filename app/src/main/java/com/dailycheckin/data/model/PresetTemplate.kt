@@ -55,7 +55,7 @@ object PresetTemplates {
         PresetTemplate(
             name = "蚂蚁森林",
             packageName = "com.eg.android.AlipayGphone",
-            deepLink = "alipays://platformapi/startapp?appId=60000048",
+            deepLink = "alipays://platformapi/startapp?appId=60000002",
             defaultTime = "08:30",
             checkKeywords = listOf("能量", "已收取", "蚂蚁森林"),
             targetHint = "深链直达蚂蚁森林，收取能量即视为打卡",

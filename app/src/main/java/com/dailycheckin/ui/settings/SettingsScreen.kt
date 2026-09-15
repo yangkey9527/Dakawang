@@ -9,6 +9,7 @@ import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,12 +22,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
 import androidx.compose.material.icons.outlined.Accessibility
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.SaveAlt
+import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -34,12 +39,18 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.TimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -48,6 +59,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.dailycheckin.BuildConfig
 import com.dailycheckin.data.backup.BackupManager
 import com.dailycheckin.util.DateUtils
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.launch
 
 @Composable
@@ -56,7 +69,12 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
     val scope = rememberCoroutineScope()
     val remindersEnabled by viewModel.remindersEnabled.collectAsState()
     val detectEnabled by viewModel.detectEnabled.collectAsState()
+    val reviewTime by viewModel.reviewTime.collectAsState()
+    val repeatIntervalMin by viewModel.repeatIntervalMin.collectAsState()
     val serviceRunning = viewModel.accessibilityServiceRunning()
+
+    var showReviewTimePicker by remember { mutableStateOf(false) }
+    var showIntervalDialog by remember { mutableStateOf(false) }
 
     val exportLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/json")
@@ -114,6 +132,24 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
                 subtitle = "到点提醒打卡，点击通知直达目标 APP",
                 checked = remindersEnabled,
                 onCheckedChange = { viewModel.setRemindersEnabled(it) }
+            )
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+            SettingClickRow(
+                icon = Icons.Outlined.Schedule,
+                title = "每日汇总提醒",
+                subtitle = "未完成的任务在 $reviewTime 汇总提醒一次",
+                onClick = { showReviewTimePicker = true }
+            )
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+            SettingClickRow(
+                icon = Icons.Outlined.Notifications,
+                title = "重复提醒间隔",
+                subtitle = when {
+                    repeatIntervalMin <= 0 -> "到点提醒一次后不再重复"
+                    repeatIntervalMin % 60 == 0 -> "到点未完成，每 ${repeatIntervalMin / 60} 小时提醒一次（当天 23:50 截止）"
+                    else -> "到点未完成，每 $repeatIntervalMin 分钟提醒一次（当天 23:50 截止）"
+                },
+                onClick = { showIntervalDialog = true }
             )
             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
             SettingSwitchRow(
@@ -220,52 +256,6 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
 
         Spacer(Modifier.height(16.dp))
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Outlined.SaveAlt, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                    Spacer(Modifier.width(12.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("数据备份", style = MaterialTheme.typography.titleSmall)
-                        Text(
-                            "导出全部任务与打卡记录为备份文件，重装或换机后可一键导入恢复",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                Spacer(Modifier.height(12.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedButton(
-                        onClick = { exportLauncher.launch("打卡王备份_${DateUtils.today()}.json") },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("导出备份")
-                    }
-                    OutlinedButton(
-                        onClick = { importLauncher.launch(arrayOf("application/json", "text/plain")) },
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("导入备份")
-                    }
-                }
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    "普通升级 App 不会清除历史记录；卸载重装或换新机时，用备份文件导入即可恢复",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline
-                )
-            }
-        }
-
-        Spacer(Modifier.height(16.dp))
-
         Text(
             text = "使用提示",
             style = MaterialTheme.typography.bodySmall,
@@ -287,6 +277,28 @@ fun SettingsScreen(viewModel: SettingsViewModel = viewModel()) {
                 .fillMaxWidth()
                 .padding(bottom = 24.dp),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+    }
+
+    if (showReviewTimePicker) {
+        SettingsTimePickerDialog(
+            initial = DateUtils.parseTime(reviewTime),
+            onConfirm = {
+                viewModel.setReviewTime(it.format(DateTimeFormatter.ofPattern("HH:mm")))
+                showReviewTimePicker = false
+            },
+            onDismiss = { showReviewTimePicker = false }
+        )
+    }
+
+    if (showIntervalDialog) {
+        RepeatIntervalDialog(
+            current = repeatIntervalMin,
+            onSelect = {
+                viewModel.setRepeatIntervalMin(it)
+                showIntervalDialog = false
+            },
+            onDismiss = { showIntervalDialog = false }
         )
     }
 }
@@ -317,4 +329,115 @@ private fun SettingSwitchRow(
         }
         Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
+}
+
+@Composable
+private fun SettingClickRow(
+    icon: ImageVector,
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+        Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
+            Text(title, style = MaterialTheme.typography.titleSmall)
+            Text(
+                subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Icon(
+            Icons.AutoMirrored.Outlined.KeyboardArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.outline
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SettingsTimePickerDialog(
+    initial: LocalTime,
+    onConfirm: (LocalTime) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var state by remember {
+        mutableStateOf(TimePickerState(initial.hour, initial.minute, is24Hour = true))
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("选择每日汇总提醒时间") },
+        text = { TimePicker(state = state) },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(LocalTime.of(state.hour, state.minute)) }) {
+                Text("确定")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("取消")
+            }
+        }
+    )
+}
+
+@Composable
+private fun RepeatIntervalDialog(
+    current: Int,
+    onSelect: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val options = listOf(
+        0 to "不重复",
+        30 to "每 30 分钟",
+        60 to "每 1 小时",
+        90 to "每 1.5 小时"
+    )
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("重复提醒间隔") },
+        text = {
+            Column {
+                Text(
+                    "到点未完成时，按间隔重复提醒，直到完成或当天 23:50",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(Modifier.height(8.dp))
+                options.forEach { (min, label) ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onSelect(min) }
+                            .padding(vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            label,
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = if (min == current) FontWeight.SemiBold else FontWeight.Normal,
+                            color = if (min == current) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                        )
+                        if (min == current) {
+                            Text("当前", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("关闭")
+            }
+        }
+    )
 }

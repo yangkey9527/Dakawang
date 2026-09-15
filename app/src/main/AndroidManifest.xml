@@ -8,21 +8,46 @@
     <application
         android:name=".DailyCheckinApp"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_launcher_pending"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/ic_launcher_round_pending"
         android:supportsRtl="true"
         android:theme="@style/Theme.DailyCheckin">
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.DailyCheckin">
+            android:theme="@style/Theme.DailyCheckin" />
+
+        <!-- 动态桌面图标：未全部完成（默认启用） -->
+        <activity-alias
+            android:name=".IconPending"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_pending"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher_round_pending"
+            android:targetActivity=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
+
+        <!-- 动态桌面图标：今日全部完成（由 LauncherIconHelper 切换启用） -->
+        <activity-alias
+            android:name=".IconAllDone"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_done"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher_round_done"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
         <service
             android:name=".accessibility.CheckinAccessibilityService"

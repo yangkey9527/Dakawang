@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.LocalFireDepartment
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material3.Card
@@ -29,6 +30,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -39,6 +41,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -113,6 +117,14 @@ private fun HomeHeader(done: Int, total: Int, onAddTask: () -> Unit) {
                 Text("添加任务")
             }
         }
+        Spacer(Modifier.height(12.dp))
+        LinearProgressIndicator(
+            progress = { if (total > 0) done.toFloat() / total else 0f },
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.primary,
+            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+            strokeCap = StrokeCap.Round
+        )
     }
 }
 
@@ -167,7 +179,9 @@ private fun TaskCard(
             .fillMaxWidth()
             .clickable(onClick = onEdit),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        colors = CardDefaults.cardColors(
+            containerColor = if (done) accent.copy(alpha = 0.05f) else MaterialTheme.colorScheme.surface
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -210,6 +224,10 @@ private fun TaskCard(
                 StatusIcon(done = done, skipped = skipped, accent = accent)
             }
 
+            Spacer(Modifier.height(8.dp))
+
+            StatsRow(streak = item.streak, totalDays = item.totalDays, accent = accent)
+
             Spacer(Modifier.height(12.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -241,6 +259,34 @@ private fun TaskCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun StatsRow(streak: Int, totalDays: Int, accent: Color) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (totalDays == 0) {
+            StatChip(text = "尚未打卡", color = MaterialTheme.colorScheme.outline)
+        } else {
+            StatChip(text = "连续 $streak 天", color = accent, icon = Icons.Outlined.LocalFireDepartment)
+            StatChip(text = "累计 $totalDays 天", color = accent, icon = Icons.Outlined.CheckCircle)
+        }
+    }
+}
+
+@Composable
+private fun StatChip(text: String, color: Color, icon: ImageVector? = null) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .background(color.copy(alpha = 0.12f), RoundedCornerShape(6.dp))
+            .padding(horizontal = 8.dp, vertical = 3.dp)
+    ) {
+        if (icon != null) {
+            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.size(14.dp))
+            Spacer(Modifier.width(3.dp))
+        }
+        Text(text, style = MaterialTheme.typography.labelSmall, color = color, fontWeight = FontWeight.Medium)
     }
 }
 

@@ -12,7 +12,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 /**
- * 通知按钮"我已打卡"：标记今日完成并取消当天提醒。
+ * 通知按钮"我已打卡"：标记今日完成并取消当天剩余的重复提醒。
+ * 注意：主提醒链不能取消——它可能已是明天的提醒，取消会导致明天不再提醒。
  */
 class CheckinActionReceiver : BroadcastReceiver() {
 
@@ -24,7 +25,7 @@ class CheckinActionReceiver : BroadcastReceiver() {
             try {
                 val repo = CheckinRepository(context)
                 repo.markDone(taskId)
-                CheckinScheduler.cancelOne(context, taskId)
+                CheckinScheduler.cancelRetry(context, taskId)
             } finally {
                 pendingResult.finish()
             }

@@ -7,6 +7,7 @@ import com.dailycheckin.data.db.AppDatabase
 import com.dailycheckin.data.db.CheckinRecord
 import com.dailycheckin.data.repo.SettingsRepository
 import com.dailycheckin.util.DateUtils
+import com.dailycheckin.util.LauncherIconHelper
 import java.time.LocalTime
 import kotlinx.coroutines.flow.first
 
@@ -39,6 +40,9 @@ class CheckinReviewWorker(
         if (pending.isNotEmpty()) {
             NotificationHelper.showReviewReminder(appContext, pending.map { it.name })
         }
+
+        // 顺手同步桌面图标（复查时若当天已全部完成 → 提前切绿勾）
+        runCatching { LauncherIconHelper.sync(appContext) }
 
         reschedule()
         return Result.success()

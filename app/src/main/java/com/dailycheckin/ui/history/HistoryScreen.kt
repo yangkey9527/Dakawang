@@ -47,6 +47,7 @@ import com.dailycheckin.data.db.CheckinTask
 import com.dailycheckin.ui.common.TaskIcon
 import com.dailycheckin.ui.theme.taskColor
 import com.dailycheckin.util.DateUtils
+import com.dailycheckin.util.computeStreak
 import java.time.LocalDate
 import java.time.YearMonth
 
@@ -281,18 +282,10 @@ private fun HistoryStats(
     val monthDone = recordMap.entries.count {
         it.key.startsWith(month.toString()) && it.value.status == CheckinRecord.STATUS_DONE
     }
-    val streak = remember(recordMap) {
-        var count = 0
-        var cursor = LocalDate.now()
-        if (recordMap[cursor.toString()]?.status != CheckinRecord.STATUS_DONE) {
-            cursor = cursor.minusDays(1)
-        }
-        while (recordMap[cursor.toString()]?.status == CheckinRecord.STATUS_DONE) {
-            count++
-            cursor = cursor.minusDays(1)
-        }
-        count
+    val doneDates = remember(recordMap) {
+        recordMap.entries.filter { it.value.status == CheckinRecord.STATUS_DONE }.map { it.key }.toSet()
     }
+    val streak = remember(doneDates) { computeStreak(doneDates) }
 
     Column(
         modifier = Modifier

@@ -41,10 +41,12 @@ class CheckinReminderWorker(
         val done = record?.status == CheckinRecord.STATUS_DONE
 
         if (!done) {
-            NotificationHelper.showReminder(appContext, task)
+            val interval = SettingsRepository(appContext).repeatIntervalMin.first()
+            val hasRetry = CheckinScheduler.notifyIfPending(appContext, taskId, interval)
+            if (!hasRetry) reschedule()
+        } else {
+            reschedule()
         }
-
-        reschedule()
         return Result.success()
     }
 
